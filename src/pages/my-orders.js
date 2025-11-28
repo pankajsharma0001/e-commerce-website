@@ -18,14 +18,14 @@ export default function MyOrders() {
     const parsedUser = JSON.parse(storedUser);
     setUser(parsedUser);
 
-    // Fetch all orders and filter by user email
-    fetch("/api/admin/orders")
+    // Fetch all orders (including admin-deleted) and filter by user email
+    fetch("/api/customer/orders")
       .then((res) => res.json())
       .then((data) => {
         const userOrders = data.filter(
           (order) => order.email === parsedUser.email
         );
-        // Show all orders except rejected ones
+        // Show all orders except rejected ones (but include admin-deleted)
         const filteredOrders = userOrders.filter(
           (order) => order.status !== "rejected"
         );

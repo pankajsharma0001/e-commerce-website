@@ -10,10 +10,10 @@ export default async function handler(req, res) {
     const db = client.db("store");
 
     if (req.method === "GET") {
-      // Get all orders
+      // Get all orders (excluding admin-deleted orders)
       const orders = await db
         .collection("orders")
-        .find({})
+        .find({ deletedByAdmin: { $ne: true } })
         .sort({ createdAt: -1 })
         .toArray();
       res.status(200).json(orders);
@@ -43,14 +43,17 @@ export default async function handler(req, res) {
         res.status(404).json({ success: false, message: "Order not found" });
       }
     } else if (req.method === "DELETE") {
-      // Delete order
+      // Mark order as deleted by admin (soft delete)
       const { id } = req.query;
       if (!id) {
         return res.status(400).json({ success: false, message: "Missing id" });
       }
-      const result = await db.collection("orders").deleteOne({ _id: new ObjectId(id) });
-      if (result.deletedCount > 0) {
-        res.status(200).json({ success: true, message: "Order deleted" });
+      const result = await db.collection("orders").updateOne(
+        { _id: new ObjectId(id) },
+        { $set: { deletedByAdmin: true, updatedAt: new Date() } }
+      );
+      if (result.modifiedCount > 0) {
+        res.status(200).json({ success: true, message: "Order removed from admin view" });
       } else {
         res.status(404).json({ success: false, message: "Order not found" });
       }

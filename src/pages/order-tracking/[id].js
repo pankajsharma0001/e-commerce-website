@@ -11,7 +11,7 @@ export default function OrderTracking() {
   useEffect(() => {
     if (!id) return;
 
-    fetch("/api/admin/orders")
+    fetch("/api/customer/orders")
       .then((res) => res.json())
       .then((data) => {
         const foundOrder = data.find((o) => o._id === id);

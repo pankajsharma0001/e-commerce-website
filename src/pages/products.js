@@ -70,7 +70,7 @@ export default function Products() {
                 </p>
 
                 <p className="text-indigo-600 font-bold text-lg mb-3">
-                  ${product.price}
+                  Rs.{product.price}
                 </p>
               </a>
             </Link>

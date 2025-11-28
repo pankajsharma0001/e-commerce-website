@@ -8,8 +8,8 @@ export default function OrderTracking() {
   const [filteredOrders, setFilteredOrders] = useState([]);
 
   useEffect(() => {
-    // Fetch all orders
-    fetch("/api/admin/orders")
+    // Fetch all orders (including admin-deleted for customer history)
+    fetch("/api/customer/orders")
       .then((res) => res.json())
       .then((data) => {
         setOrders(data || []);
