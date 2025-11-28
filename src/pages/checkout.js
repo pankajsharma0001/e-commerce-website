@@ -61,8 +61,8 @@ export default function Checkout() {
     };
 
     try {
-      // Save order to database
-      const res = await fetch("/api/admin/orders", {
+      // Save order to database (using customer API which sends customer confirmation email)
+      const res = await fetch("/api/customer/orders", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -71,7 +71,7 @@ export default function Checkout() {
       });
 
       const response = await res.json();
-      if (response.success) {
+      if (response.success || response.orderId) {
         // Clear cart (context)
         setCart([]);
         setTrackingId(newTrackingId);
@@ -100,9 +100,9 @@ export default function Checkout() {
 
           <p className="text-gray-600 text-lg mb-6">We will contact you soon!</p>
 
-          <div className="space-y-3">
+          <div>
             <Link href="/my-orders">
-              <button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 px-6 rounded-lg font-semibold transition">
+              <button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 px-6 rounded-lg font-semibold transition mb-5">
                 📦 View My Orders
               </button>
             </Link>

@@ -87,7 +87,7 @@ export default async function handler(req, res) {
       await db.collection("products").insertOne({
         name,
         price: Number(price),
-        stock: Number(fields.stock),
+        stock: Number(stock),
         desc,
         image: result.secure_url,
         createdAt: new Date(),
