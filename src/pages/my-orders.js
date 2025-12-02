@@ -18,17 +18,11 @@ export default function MyOrders() {
     const parsedUser = JSON.parse(storedUser);
     setUser(parsedUser);
 
-    // Fetch all orders (including admin-deleted) and filter by user email
     fetch("/api/customer/orders")
       .then((res) => res.json())
       .then((data) => {
-        const userOrders = data.filter(
-          (order) => order.email === parsedUser.email
-        );
-        // Show all orders except rejected ones (but include admin-deleted)
-        const filteredOrders = userOrders.filter(
-          (order) => order.status !== "rejected"
-        );
+        const userOrders = data.filter((order) => order.email === parsedUser.email);
+        const filteredOrders = userOrders.filter((order) => order.status !== "rejected");
         setOrders(filteredOrders);
         setLoading(false);
       })
@@ -52,8 +46,6 @@ export default function MyOrders() {
     processing: "⚙",
     delivering: "🚚",
     done: "✅",
-    delivering: "🚚",
-    done: "✅",
   };
 
   if (loading) {
@@ -68,16 +60,12 @@ export default function MyOrders() {
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="max-w-6xl mx-auto px-6">
         <h1 className="text-4xl font-bold text-gray-800 mb-2">My Orders</h1>
-        <p className="text-gray-600 mb-8">
-          View and track all your orders
-        </p>
+        <p className="text-gray-600 mb-8">View and track all your orders</p>
 
         {orders.length === 0 ? (
           <div className="bg-white rounded-lg p-12 text-center">
             <p className="text-gray-600 text-xl mb-4">📭 No orders found</p>
-            <p className="text-gray-500 mb-6">
-              You don't have any shipped or processing orders yet.
-            </p>
+            <p className="text-gray-500 mb-6">You don't have any shipped or processing orders yet.</p>
             <Link href="/products">
               <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold">
                 Start Shopping
@@ -91,22 +79,22 @@ export default function MyOrders() {
                 key={order._id}
                 className="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition"
               >
-                <div className="flex justify-between items-start mb-4">
-                  <div>
+                {/* Header: Order ID + Status */}
+                <div className="flex flex-col sm:flex-row sm:justify-between items-start sm:items-center mb-4 gap-2">
+                  <div className="truncate max-w-full">
                     <p className="text-sm text-gray-500">Order ID</p>
-                    <p className="text-lg font-bold text-gray-800">
+                    <p className="text-lg font-bold text-gray-800 truncate">
                       #{order.trackingId}
                     </p>
                   </div>
                   <span
-                    className={`px-4 py-2 rounded-full font-semibold ${
-                      statusColors[order.status]
-                    }`}
+                    className={`px-4 py-2 rounded-full font-semibold flex-shrink-0 ${statusColors[order.status]}`}
                   >
                     {statusIcons[order.status]} {order.status.toUpperCase()}
                   </span>
                 </div>
 
+                {/* Order Info */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 pb-4 border-b">
                   <div>
                     <p className="text-sm text-gray-600">Order Date</p>
@@ -122,31 +110,41 @@ export default function MyOrders() {
                   </div>
                 </div>
 
+                {/* Items with Images */}
                 <div className="mb-4">
                   <p className="text-sm text-gray-600 mb-2">Items</p>
-                  <div className="space-y-1">
+                  <div className="space-y-2">
                     {order.cart.map((item, idx) => (
-                      <p key={idx} className="text-gray-700">
-                        • {item.name} x{item.qty} @ Rs. {item.price}
-                      </p>
+                      <div key={idx} className="flex items-center gap-3">
+                        <img
+                          src={item.image}
+                          alt={item.name}
+                          className="w-16 h-16 object-cover rounded-lg flex-shrink-0"
+                        />
+                        <div className="flex justify-between w-full items-center">
+                          <span className="text-gray-700 truncate">{item.name} x{item.qty}</span>
+                          <span className="text-gray-800 font-semibold">Rs. {item.price * item.qty}</span>
+                        </div>
+                      </div>
                     ))}
                   </div>
                 </div>
 
-                <div className="flex gap-4">
+                {/* Action Buttons */}
+                <div className="flex flex-col sm:flex-row gap-3 mt-4">
                   {order.status !== "done" ? (
-                    <Link href={`/order-tracking/${order._id}`}>
-                      <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold transition">
+                    <Link href={`/order-tracking/${order._id}`} className="flex-1">
+                      <button className="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold transition">
                         🚚 Track Order
                       </button>
                     </Link>
                   ) : (
-                    <button className="bg-gray-400 text-white px-6 py-2 rounded-lg font-semibold cursor-default">
+                    <button className="w-full sm:w-auto bg-gray-400 text-white px-6 py-2 rounded-lg font-semibold cursor-default">
                       ✅ Delivered
                     </button>
                   )}
-                  <Link href="/products">
-                    <button className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-semibold transition">
+                  <Link href="/products" className="flex-1">
+                    <button className="w-full bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-semibold transition">
                       🛍️ Shop More
                     </button>
                   </Link>

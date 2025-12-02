@@ -13,23 +13,23 @@ export default function Login() {
   const [isSignUp, setIsSignUp] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [shake, setShake] = useState(false);
 
-  // Check if user logged in via Google
   useEffect(() => {
     if (session?.user) {
-      // Store Google user in localStorage
-      localStorage.setItem("user", JSON.stringify({
-        id: Date.now(),
-        name: session.user.name,
-        email: session.user.email,
-        image: session.user.image
-      }));
-      // Redirect to dashboard
+      localStorage.setItem(
+        "user",
+        JSON.stringify({
+          id: Date.now(),
+          name: session.user.name,
+          email: session.user.email,
+          image: session.user.image,
+        })
+      );
       router.push("/dashboard");
     }
   }, [session, router]);
 
-  // Google Login
   const handleGoogleLogin = async () => {
     setLoading(true);
     try {
@@ -41,7 +41,6 @@ export default function Login() {
     }
   };
 
-  // Email/Password Login or SignUp
   const handleSubmit = (e) => {
     e.preventDefault();
     setError("");
@@ -51,70 +50,99 @@ export default function Login() {
       if (isSignUp) {
         if (!name || !email || !password || !mobile) {
           setError("Please fill all fields");
+          setShake(true);
           setLoading(false);
+          setTimeout(() => setShake(false), 400);
           return;
         }
 
         const newUser = { id: Date.now(), name, email, password, mobile };
         const existingUsers = JSON.parse(localStorage.getItem("users") || "[]");
 
-        if (existingUsers.some(u => u.email === email)) {
+        if (existingUsers.some((u) => u.email === email)) {
           setError("Email already registered");
+          setShake(true);
           setLoading(false);
+          setTimeout(() => setShake(false), 400);
           return;
         }
 
         existingUsers.push(newUser);
         localStorage.setItem("users", JSON.stringify(existingUsers));
-        localStorage.setItem("user", JSON.stringify({ id: newUser.id, name: newUser.name, email: newUser.email, mobile: newUser.mobile }));
+        localStorage.setItem(
+          "user",
+          JSON.stringify({
+            id: newUser.id,
+            name: newUser.name,
+            email: newUser.email,
+            mobile: newUser.mobile,
+          })
+        );
         router.push("/dashboard");
       } else {
         if (!email || !password) {
           setError("Please fill all fields");
+          setShake(true);
           setLoading(false);
+          setTimeout(() => setShake(false), 400);
           return;
         }
 
         const existingUsers = JSON.parse(localStorage.getItem("users") || "[]");
-        const user = existingUsers.find(u => u.email === email && u.password === password);
+        const user = existingUsers.find(
+          (u) => u.email === email && u.password === password
+        );
 
         if (!user) {
           setError("Invalid email or password");
+          setShake(true);
           setLoading(false);
+          setTimeout(() => setShake(false), 400);
           return;
         }
 
-        localStorage.setItem("user", JSON.stringify({ id: user.id, name: user.name, email: user.email }));
+        localStorage.setItem(
+          "user",
+          JSON.stringify({ id: user.id, name: user.name, email: user.email })
+        );
         router.push("/dashboard");
       }
     } catch (err) {
       setError(err.message);
+      setShake(true);
     } finally {
       setLoading(false);
+      setTimeout(() => setShake(false), 400);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-600 via-purple-500 to-pink-500 font-sans relative overflow-hidden">
-      {/* Decorative background elements */}
-      <div className="absolute top-0 left-0 w-96 h-96 bg-white opacity-5 rounded-full -translate-x-1/2 -translate-y-1/2 blur-3xl"></div>
-      <div className="absolute bottom-0 right-0 w-96 h-96 bg-white opacity-5 rounded-full translate-x-1/2 translate-y-1/2 blur-3xl"></div>
-      
-      <div className="w-full max-w-md p-8 bg-white rounded-2xl shadow-2xl text-center relative z-10">
-        <h1 className="text-4xl font-bold text-indigo-600 mb-6">MyStore</h1>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 font-sans relative overflow-hidden">
+      {/* Background glow circles */}
+      <div className="absolute top-0 left-0 w-96 h-96 bg-white opacity-10 rounded-full -translate-x-1/2 -translate-y-1/2 blur-3xl"></div>
+      <div className="absolute bottom-0 right-0 w-96 h-96 bg-white opacity-10 rounded-full translate-x-1/2 translate-y-1/2 blur-3xl"></div>
 
-        <p className="text-gray-600 mb-6">{isSignUp ? "Create a new account" : "Welcome back"}</p>
+      {/* Login Card */}
+      <div
+        className={`w-full max-w-md p-10 bg-white rounded-3xl shadow-2xl text-center relative z-10 transition-transform ${
+          shake ? "animate-shake" : ""
+        }`}
+      >
+        <h1 className="text-4xl font-extrabold text-indigo-600 mb-4">JK Mega Mart</h1>
+        <p className="text-gray-600 mb-8">
+          {isSignUp ? "Create your account" : "Sign in to your account"}
+        </p>
 
-        <form onSubmit={handleSubmit} className="space-y-4 text-left mb-6">
+        <form onSubmit={handleSubmit} className="space-y-5 text-left mb-6">
           {isSignUp && (
             <div>
               <label className="block text-gray-700 font-semibold mb-1">Full Name</label>
               <input
                 type="text"
                 value={name}
-                onChange={e => setName(e.target.value)}
-                placeholder="Enter your name"
-                className="w-full p-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-indigo-600 transition"
+                onChange={(e) => setName(e.target.value)}
+                placeholder="John Doe"
+                className="w-full p-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-indigo-500 transition"
               />
             </div>
           )}
@@ -124,9 +152,9 @@ export default function Login() {
             <input
               type="email"
               value={email}
-              onChange={e => setEmail(e.target.value)}
-              placeholder="Enter your email"
-              className="w-full p-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-indigo-600 transition"
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="example@mail.com"
+              className="w-full p-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-indigo-500 transition"
             />
           </div>
 
@@ -136,9 +164,9 @@ export default function Login() {
               <input
                 type="tel"
                 value={mobile}
-                onChange={e => setMobile(e.target.value)}
-                placeholder="Enter your mobile number"
-                className="w-full p-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-indigo-600 transition"
+                onChange={(e) => setMobile(e.target.value)}
+                placeholder="+977 9800000000"
+                className="w-full p-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-indigo-500 transition"
               />
             </div>
           )}
@@ -148,14 +176,14 @@ export default function Login() {
             <input
               type="password"
               value={password}
-              onChange={e => setPassword(e.target.value)}
+              onChange={(e) => setPassword(e.target.value)}
               placeholder="Enter your password"
-              className="w-full p-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-indigo-600 transition"
+              className="w-full p-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-indigo-500 transition"
             />
           </div>
 
           {error && (
-            <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-3">
+            <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-3 rounded">
               {error}
             </div>
           )}
@@ -163,8 +191,9 @@ export default function Login() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 font-bold rounded-lg transition disabled:opacity-50"
+            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 font-bold rounded-lg transition disabled:opacity-50 flex items-center justify-center gap-3"
           >
+            {loading && <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}
             {loading ? "Loading..." : isSignUp ? "Sign Up" : "Login"}
           </button>
         </form>
@@ -178,26 +207,41 @@ export default function Login() {
           </div>
         </div>
 
-        {/* Google Login */}
         <button
           onClick={handleGoogleLogin}
           disabled={loading}
-          className="w-full flex items-center justify-center gap-3 bg-white hover:bg-gray-50 border-2 border-gray-300 text-gray-800 py-3 rounded-lg font-semibold transition disabled:opacity-50 mb-4"
+          className="w-full flex items-center justify-center gap-3 bg-white hover:bg-gray-100 border-2 border-gray-300 text-gray-800 py-3 rounded-lg font-semibold transition disabled:opacity-50 mb-4"
         >
-          <span className="text-xl font-bold text-blue-600">G</span>
+          <span className="text-xl font-bold text-indigo-600">G</span>
           {loading ? "Loading..." : "Continue with Google"}
         </button>
 
         <p className="text-center text-gray-600 mt-4">
           {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
           <button
-            onClick={() => { setIsSignUp(!isSignUp); setError(""); }}
+            onClick={() => {
+              setIsSignUp(!isSignUp);
+              setError("");
+            }}
             className="text-indigo-600 font-bold hover:underline"
           >
             {isSignUp ? "Login" : "Sign Up"}
           </button>
         </p>
       </div>
+
+      <style jsx>{`
+        .animate-shake {
+          animation: shake 0.3s ease-in-out;
+        }
+        @keyframes shake {
+          0% { transform: translateX(0); }
+          25% { transform: translateX(-5px); }
+          50% { transform: translateX(5px); }
+          75% { transform: translateX(-5px); }
+          100% { transform: translateX(0); }
+        }
+      `}</style>
     </div>
   );
 }

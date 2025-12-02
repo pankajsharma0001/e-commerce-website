@@ -369,16 +369,16 @@ function OrderCard({ order, setOrders, orders }) {
             <button
               onClick={() => updateOrderStatus("accepted")}
               disabled={loading}
-              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded disabled:opacity-50"
+              className="relative bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded disabled:opacity-50"
             >
-              ✓ Accept
+              {loading ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto"></div> : "✓ Accept"}
             </button>
             <button
               onClick={() => updateOrderStatus("rejected")}
               disabled={loading}
-              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded disabled:opacity-50"
+              className="relative bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded disabled:opacity-50"
             >
-              ✗ Reject
+              {loading ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto"></div> : "✗ Reject"}
             </button>
           </>
         )}
@@ -387,9 +387,9 @@ function OrderCard({ order, setOrders, orders }) {
           <button
             onClick={() => updateOrderStatus("processing")}
             disabled={loading}
-            className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded disabled:opacity-50"
+            className="relative bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded disabled:opacity-50"
           >
-            ⚙ Processing
+            {loading ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto"></div> : "⚙ Processing"}
           </button>
         )}
 
@@ -397,9 +397,9 @@ function OrderCard({ order, setOrders, orders }) {
           <button
             onClick={() => updateOrderStatus("delivering")}
             disabled={loading}
-            className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded disabled:opacity-50"
+            className="relative bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded disabled:opacity-50"
           >
-            🚚 Delivering
+            {loading ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto"></div> : "🚚 Delivering"}
           </button>
         )}
 
@@ -407,27 +407,27 @@ function OrderCard({ order, setOrders, orders }) {
           <button
             onClick={() => updateOrderStatus("done")}
             disabled={loading}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded disabled:opacity-50"
+            className="relative bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded disabled:opacity-50"
           >
-            ✅ Done
+            {loading ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto"></div> : "✅ Done"}
           </button>
         )}
 
         {order.status === "done" && (
           <button
             onClick={deleteOrder}
-            className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded"
+            className="relative bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded"
           >
-            🗑 Remove
+            {loading ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto"></div> : "🗑 Remove"}
           </button>
         )}
 
         {order.status === "rejected" && (
           <button
             onClick={deleteOrder}
-            className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded"
+            className="relative bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded"
           >
-            🗑 Remove
+            {loading ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto"></div> : "🗑 Remove"}
           </button>
         )}
       </div>

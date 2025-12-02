@@ -6,14 +6,12 @@ import { useCart } from "@/context/CartContext";
 export default function Products() {
   const router = useRouter();
   const [products, setProducts] = useState([]);
-  const { addToCart } = useCart(); // use CartContext
+  const { addToCart } = useCart();
 
   useEffect(() => {
     fetch("/api/products")
       .then((res) => {
-        if (!res.ok) {
-          throw new Error(`API error: ${res.status}`);
-        }
+        if (!res.ok) throw new Error(`API error: ${res.status}`);
         return res.json();
       })
       .then((data) => setProducts(data))
@@ -34,7 +32,9 @@ export default function Products() {
       </div>
 
       {/* PRODUCTS GRID */}
-      <div className="max-w-7xl mx-auto px-6 py-16 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 
+                      grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-10">
+        
         {products.length === 0 && (
           <p className="text-center text-gray-500 col-span-full text-xl">
             No products available 😞
@@ -44,12 +44,13 @@ export default function Products() {
         {products.map((product) => (
           <div
             key={product._id}
-            className="bg-white p-6 rounded-2xl shadow-lg hover:shadow-2xl hover:-translate-y-1 transition duration-300"
+            className="bg-white p-6 rounded-2xl shadow-lg hover:shadow-2xl 
+                       hover:-translate-y-1 transition duration-300"
           >
-            <Link href={`/products/${product._id}`} legacyBehavior>
-              <a>
-                {/* Product Image */}
-                <div className="w-full h-48 rounded-xl shadow-inner mb-5 overflow-hidden flex items-center justify-center bg-gray-100">
+            {/* Product Link */}
+            <Link href={`/products/${product._id}`}>
+              <div>
+                <div className="w-full h-48 rounded-xl mb-5 overflow-hidden flex items-center justify-center bg-gray-100">
                   {product.image ? (
                     <img
                       src={product.image}
@@ -69,23 +70,21 @@ export default function Products() {
                   {product.desc}
                 </p>
 
-                <p className="text-indigo-600 font-bold text-lg mb-3">
-                  Rs.{product.price}
+                <p className="text-indigo-600 font-bold text-lg mb-4">
+                  Rs. {product.price}
                 </p>
-              </a>
+              </div>
             </Link>
 
             {/* Add to Cart Button */}
             <button
               onClick={() => {
                 const user = localStorage.getItem("user");
-                if (!user) {
-                  router.push("/login");
-                  return;
-                }
+                if (!user) return router.push("/login");
                 addToCart(product);
               }}
-              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-lg font-medium transition"
+              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white 
+                         py-2 rounded-lg font-medium transition"
             >
               Add to Cart
             </button>
@@ -95,7 +94,7 @@ export default function Products() {
 
       {/* FOOTER */}
       <footer className="text-center py-6 bg-gray-900 text-gray-300 text-sm">
-        © {new Date().getFullYear()} MyStore — All Rights Reserved.
+        © {new Date().getFullYear()} JK Mega Mart — All Rights Reserved.
       </footer>
     </div>
   );

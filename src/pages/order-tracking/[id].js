@@ -112,16 +112,12 @@ export default function OrderTracking() {
         </div>
 
         {/* Timeline */}
-        <div className="bg-white rounded-2xl shadow-lg p-8 mb-8">
-          <h2 className="text-2xl font-semibold text-gray-800 mb-8">Delivery Timeline</h2>
-
-          <div className="flex justify-between items-center relative">
-            {/* Background line */}
+        <div className="bg-white rounded-2xl shadow-lg p-8 mb-8 overflow-x-auto">
+          <h2 className="text-2xl font-semibold text-gray-800 mb-6">Delivery Timeline</h2>
+          <div className="flex justify-between items-center relative min-w-[500px]">
             <div className="absolute top-10 left-0 right-0 h-1 bg-gray-300"></div>
-
             {statusTimeline.map((item, index) => (
-              <div key={item.step} className="flex flex-col items-center relative z-10">
-                {/* Circle */}
+              <div key={item.step} className="flex flex-col items-center relative z-10 px-2">
                 <div
                   className={`w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold transition-all ${
                     index <= currentStepIndex
@@ -131,7 +127,6 @@ export default function OrderTracking() {
                 >
                   {item.icon}
                 </div>
-                {/* Label */}
                 <p
                   className={`text-center mt-3 font-semibold text-sm ${
                     index <= currentStepIndex ? "text-green-600" : "text-gray-500"

@@ -115,7 +115,17 @@ export default async function handler(req, res) {
       };
 
       const result = await db.collection("orders").insertOne(order);
-
+    
+      const bulkOps = order.cart.map(item => ({
+        updateOne: {
+          filter: { _id: new ObjectId(item._id) },
+          update: { $inc: { stock: -(item.qty || 1) } },
+        },
+      }));
+      if (bulkOps.length > 0) {
+        await db.collection("products").bulkWrite(bulkOps);
+      }
+      
       // Send Customer Confirmation Email
       try {
         await sendCustomerOrderEmail(order);
