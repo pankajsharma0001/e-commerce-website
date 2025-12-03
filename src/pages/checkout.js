@@ -494,7 +494,7 @@ export default function Checkout() {
                     <textarea
                       value={address}
                       onChange={(e) => setAddress(e.target.value)}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      className="w-full p-3 text-gray-600 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                       rows="3"
                       placeholder="House number, street, ward number"
                       required

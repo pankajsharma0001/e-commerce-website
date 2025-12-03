@@ -7,25 +7,22 @@ import { SessionProvider } from "next-auth/react";
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import { Analytics } from "@vercel/analytics/next"
 
-// Create a wrapper component that uses the router
-function MyAppContent({ Component, pageProps, session }) {
+export default function App({ Component, pageProps: { session, ...pageProps } }) {
   const router = useRouter();
   const hideNavbar = router.pathname === '/admin-login';
   
   return (
-    <SessionProvider session={session}>
+    <SessionProvider 
+      session={session}
+      refetchInterval={5 * 60}
+      refetchOnWindowFocus={true}
+    >
       <CartProvider>
         {!hideNavbar && <Navbar />}
-        <Analytics/>
-        <SpeedInsights/>
+        <Analytics />
+        <SpeedInsights />
         <Component {...pageProps} />
       </CartProvider>
     </SessionProvider>
   );
-}
-
-export default function App({ Component, pageProps: { session, ...pageProps } }) {
-  // Note: The router won't be available during SSR for the initial page
-  // But this will work for client-side navigation
-  return <MyAppContent Component={Component} pageProps={pageProps} session={session} />;
 }

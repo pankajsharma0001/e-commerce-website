@@ -1,113 +1,135 @@
 // pages/profile.js
 import { useRouter } from "next/router";
+import { useSession, signOut } from "next-auth/react";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
 export default function Profile() {
   const router = useRouter();
-  const [user, setUser] = useState(null);
+  const { data: session, status, update } = useSession();
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editName, setEditName] = useState("");
   const [editMobile, setEditMobile] = useState("");
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (!storedUser) {
+    // Redirect to login if not authenticated
+    if (status === "unauthenticated") {
       router.push("/login");
       return;
     }
-    const parsedUser = JSON.parse(storedUser);
-    setUser(parsedUser);
-    setEditName(parsedUser.name || "");
-    setEditMobile(parsedUser.mobile || "");
-    setLoading(false);
-  }, [router]);
+
+    // Set user data when session is available
+    if (status === "authenticated" && session?.user) {
+      setEditName(session.user.name || "");
+      setEditMobile(session.user.mobile || "");
+      setLoading(false);
+    }
+
+    if (status === "loading") {
+      setLoading(true);
+    }
+  }, [status, session, router]);
 
   const handleSave = async () => {
     if (!editName.trim()) {
-      alert("Name cannot be empty!");
+      setError("Name cannot be empty!");
       return;
     }
 
+    setError("");
+    setSuccess("");
+
     try {
-      const res = await fetch(`/api/users/${user._id}`, {
+      // Update user in MongoDB
+      const res = await fetch("/api/users/update", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          userId: session.user.id,
           name: editName,
           mobile: editMobile,
         }),
       });
 
-      let responseData;
-      
-      // Try to parse JSON, but handle empty responses
-      try {
-        const text = await res.text();
-        responseData = text ? JSON.parse(text) : {};
-      } catch (parseError) {
-        console.error("Failed to parse response:", parseError);
-        responseData = {};
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to update profile");
       }
 
-      // Always update local state for immediate feedback
-      const updatedUser = {
-        ...user,
-        name: editName,
-        mobile: editMobile
-      };
-      
-      setUser(updatedUser);
-      
-      // Update localStorage
-      localStorage.setItem("user", JSON.stringify(updatedUser));
-      
+      // Update the session with new data
+      await update({
+        ...session,
+        user: {
+          ...session.user,
+          name: editName,
+          mobile: editMobile,
+        },
+      });
+
+      setSuccess("Profile updated successfully!");
       setIsModalOpen(false);
       
-      if (res.ok) {
-        alert("Profile updated successfully!");
-      } else {
-        alert(responseData.message || "Profile updated locally. Server update may have failed.");
-      }
-      
+      // Clear success message after 3 seconds
+      setTimeout(() => setSuccess(""), 3000);
+
     } catch (err) {
       console.error("Error updating profile:", err);
-      
-      // Fallback: Update local state only
-      const updatedUser = {
-        ...user,
-        name: editName,
-        mobile: editMobile
-      };
-      setUser(updatedUser);
-      localStorage.setItem("user", JSON.stringify(updatedUser));
-      setIsModalOpen(false);
-      alert("Profile updated locally!");
+      setError(err.message || "Failed to update profile");
     }
   };
 
-  if (loading) {
+  const handleLogout = async () => {
+    await signOut({ 
+      callbackUrl: "/login",
+      redirect: true 
+    });
+  };
+
+  if (loading || status === "loading") {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+          <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
           <p className="text-lg text-gray-600">Loading profile...</p>
         </div>
       </div>
     );
   }
 
+  if (!session?.user) {
+    return null;
+  }
+
+  const user = session.user;
+
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-3xl mx-auto">
+        {/* Success Message */}
+        {success && (
+          <div className="mb-6 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg">
+            {success}
+          </div>
+        )}
+
+        {/* Error Message */}
+        {error && (
+          <div className="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+            {error}
+          </div>
+        )}
+
         {/* Profile Card */}
         <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-10 relative">
           <button
             onClick={() => setIsModalOpen(true)}
-            className="absolute top-4 right-4 text-indigo-600 font-semibold hover:text-indigo-800 transition"
+            className="absolute top-4 right-4 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition font-semibold"
           >
             Edit Profile
           </button>
@@ -117,10 +139,10 @@ export default function Profile() {
               <img
                 src={user.image}
                 alt={user.name}
-                className="w-24 h-24 rounded-full border-4 border-blue-600 object-cover"
+                className="w-24 h-24 rounded-full border-4 border-indigo-600 object-cover"
               />
             ) : (
-              <div className="w-24 h-24 rounded-full bg-blue-600 flex items-center justify-center text-white text-4xl font-bold">
+              <div className="w-24 h-24 rounded-full bg-indigo-600 flex items-center justify-center text-white text-4xl font-bold">
                 {user?.name?.charAt(0).toUpperCase()}
               </div>
             )}
@@ -129,6 +151,12 @@ export default function Profile() {
               <h1 className="text-3xl font-bold text-gray-800">{user?.name}</h1>
               <p className="text-gray-600 text-md sm:text-lg">{user?.email}</p>
               <p className="text-gray-600 text-md sm:text-lg">{user?.mobile || "Not provided"}</p>
+              <button
+                onClick={handleLogout}
+                className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-semibold"
+              >
+                Sign Out
+              </button>
             </div>
           </div>
 
@@ -151,7 +179,13 @@ export default function Profile() {
                 </div>
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <p className="text-gray-600 text-sm font-semibold">Account Type</p>
-                  <p className="text-gray-800 text-lg font-medium">{user?.image ? "Google" : "Email/Password"}</p>
+                  <p className="text-gray-800 text-lg font-medium">
+                    {user?.image ? "Google Account" : "Email/Password"}
+                  </p>
+                </div>
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <p className="text-gray-600 text-sm font-semibold">User ID</p>
+                  <p className="text-sm text-gray-800 font-mono truncate">{user?.id}</p>
                 </div>
               </div>
             </div>
@@ -175,9 +209,9 @@ export default function Profile() {
                     🚚 Track Order
                   </button>
                 </Link>
-                <Link href="/dashboard">
+                <Link href="/">
                   <button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg font-semibold transition transform hover:-translate-y-0.5">
-                    🏠 Dashboard
+                    🏠 Home
                   </button>
                 </Link>
               </div>
@@ -191,6 +225,13 @@ export default function Profile() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
           <div className="bg-white rounded-2xl p-6 sm:p-8 w-full max-w-md shadow-2xl transform transition-all scale-100">
             <h2 className="text-2xl font-bold text-gray-800 mb-4">Edit Profile</h2>
+            
+            {error && (
+              <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+                {error}
+              </div>
+            )}
+
             <div className="space-y-4">
               <div>
                 <label className="block text-gray-600 font-semibold mb-1">Full Name</label>
@@ -199,21 +240,27 @@ export default function Profile() {
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
                   className="w-full p-3 text-gray-600 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-indigo-600 transition"
+                  placeholder="Enter your full name"
                 />
               </div>
               <div>
-                <label className="block text-gray-600 font-semibold mb-1">Mobile</label>
+                <label className="block text-gray-600 font-semibold mb-1">Mobile Number</label>
                 <input
                   type="tel"
                   value={editMobile}
                   onChange={(e) => setEditMobile(e.target.value)}
                   className="w-full p-3 text-gray-600 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-indigo-600 transition"
+                  placeholder="Enter your mobile number"
                 />
               </div>
             </div>
             <div className="flex justify-end gap-4 mt-6">
               <button
-                onClick={() => setIsModalOpen(false)}
+                onClick={() => {
+                  setIsModalOpen(false);
+                  setError("");
+                  setSuccess("");
+                }}
                 className="px-6 py-2 rounded-lg border border-gray-300 hover:bg-gray-100 text-gray-600 transition font-semibold"
               >
                 Cancel
@@ -222,7 +269,7 @@ export default function Profile() {
                 onClick={handleSave}
                 className="px-6 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold transition"
               >
-                Save
+                Save Changes
               </button>
             </div>
           </div>

@@ -52,6 +52,9 @@ export default async function handler(req, res) {
         features: product.features || [],
         hasColors: product.hasColors || false,
         colors: product.colors || [],
+        // ADDED: Rating fields
+        averageRating: product.averageRating || 0,
+        reviewCount: product.reviewCount || 0,
         createdAt: product.createdAt,
         updatedAt: product.updatedAt
       }));
@@ -87,7 +90,10 @@ export default async function handler(req, res) {
         images: product.images || [],
         features: product.features || [],
         hasColors: product.hasColors || false,
-        colors: product.colors || []
+        colors: product.colors || [],
+        // ADDED: Initialize rating fields
+        averageRating: 0,
+        reviewCount: 0
       };
       
       const result = await db.collection("products").insertOne(newProduct);

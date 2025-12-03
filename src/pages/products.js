@@ -24,14 +24,22 @@ export default function Products() {
         const res = await fetch("/api/products");
         const data = await res.json();
         
-        // Get products array
-        const productList = Array.isArray(data) ? data : data.products || [];
-        setProducts(productList);
-        setFilteredProducts(productList);
+        // Get products array - note the data.products property
+        const productList = data.products || [];
+        
+        // Ensure all products have rating fields
+        const productsWithRatings = productList.map(product => ({
+          ...product,
+          averageRating: product.averageRating || 0,
+          reviewCount: product.reviewCount || 0
+        }));
+        
+        setProducts(productsWithRatings);
+        setFilteredProducts(productsWithRatings);
         
         // Calculate max price from all products
-        if (productList.length > 0) {
-          const prices = productList.map(p => p.price).filter(p => !isNaN(p));
+        if (productsWithRatings.length > 0) {
+          const prices = productsWithRatings.map(p => p.price).filter(p => !isNaN(p));
           if (prices.length > 0) {
             const maxPrice = Math.max(...prices);
             // Round up to nearest 1000
@@ -41,7 +49,7 @@ export default function Products() {
           }
         }
         
-        // Set categories
+        // Set categories - note the data.categories property
         if (data.categories) {
           setCategories(data.categories);
         }
@@ -54,7 +62,6 @@ export default function Products() {
         setLoading(false);
       }
     };
-
     fetchProducts();
   }, []);
 
@@ -98,6 +105,9 @@ export default function Products() {
       case "newest":
         filtered.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
         break;
+      case "rating":
+        filtered.sort((a, b) => (b.averageRating || 0) - (a.averageRating || 0));
+        break;
       default:
         break;
     }
@@ -122,7 +132,9 @@ export default function Products() {
     return colorMap[colorValue] || colorValue;
   };
 
-  const handleAddToCart = (product) => {
+  const handleAddToCart = (e, product) => {
+    e.stopPropagation(); // Prevent navigation when clicking "Add to Cart"
+    
     const user = localStorage.getItem("user");
     if (!user) {
       router.push("/login");
@@ -155,6 +167,49 @@ export default function Products() {
     setSearchQuery("");
     setPriceRange({ min: 0, max: 100000 });
     setSortBy("newest");
+  };
+
+  // Render star rating
+  const renderRating = (product) => {
+    const rating = product.averageRating || 0;
+    const reviewCount = product.reviewCount || 0;
+    const fullStars = Math.floor(rating);
+    const hasHalfStar = rating % 1 >= 0.5;
+    const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+
+    return (
+      <div className="mb-3">
+        <div className="flex items-center">
+          <div className="flex">
+            {[...Array(fullStars)].map((_, i) => (
+              <svg key={`full-${i}`} className="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+              </svg>
+            ))}
+            
+            {hasHalfStar && (
+              <svg className="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M10 1a1 1 0 0 1 .857.486l1.9 3.1 3.5.5a1 1 0 0 1 .554 1.706l-2.5 2.4.6 3.5a1 1 0 0 1-1.451 1.054L10 12.35l-3.1 1.63a1 1 0 0 1-1.45-1.054l.6-3.5-2.5-2.4A1 1 0 0 1 3.7 5.086l3.5-.5 1.9-3.1A1 1 0 0 1 10 1zm0 2.2L8.4 5.8a1 1 0 0 1-.753.547l-3.1.45 2.2 2.2a1 1 0 0 1 .287.885l-.5 3.1 2.8-1.5a1 1 0 0 1 .931 0l2.8 1.5-.5-3.1a1 1 0 0 1 .287-.885l2.2-2.2-3.1-.45a1 1 0 0 1-.753-.547L10 3.2z" />
+              </svg>
+            )}
+            
+            {[...Array(emptyStars)].map((_, i) => (
+              <svg key={`empty-${i}`} className="w-4 h-4 text-gray-300" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+              </svg>
+            ))}
+          </div>
+          <span className="ml-1 text-sm text-gray-600">
+            {rating > 0 ? rating.toFixed(1) : "No rating"}
+          </span>
+        </div>
+        {reviewCount > 0 && (
+          <p className="text-xs text-gray-500 mt-1">
+            ({reviewCount} review{reviewCount !== 1 ? 's' : ''})
+          </p>
+        )}
+      </div>
+    );
   };
 
   if (loading) {
@@ -231,6 +286,7 @@ export default function Products() {
                 <option value="price-low">Price: Low to High</option>
                 <option value="price-high">Price: High to Low</option>
                 <option value="name">Name: A to Z</option>
+                <option value="rating">Highest Rated</option>
               </select>
             </div>
 
@@ -407,12 +463,13 @@ export default function Products() {
               const productImage = product.images?.[0] || product.image;
               
               return (
-                <div
+                <Link
                   key={product._id}
-                  className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden flex flex-col"
+                  href={`/products/${product._id}`}
+                  className="block"
                 >
-                  {/* Product Image */}
-                  <Link href={`/products/${product._id}`}>
+                  <div className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden flex flex-col h-full cursor-pointer">
+                    {/* Product Image */}
                     <div className="relative w-full h-48 sm:h-56 overflow-hidden bg-gray-100">
                       {productImage ? (
                         <img
@@ -448,103 +505,81 @@ export default function Products() {
                         ) : null}
                       </div>
                     </div>
-                  </Link>
 
-                  {/* Product Info */}
-                  <div className="p-4 flex-grow flex flex-col">
-                    <Link href={`/products/${product._id}`}>
+                    {/* Product Info */}
+                    <div className="p-4 flex-grow flex flex-col">
                       <h3 className="font-semibold text-gray-800 mb-1 line-clamp-1 hover:text-indigo-600 transition">
                         {product.name}
                       </h3>
-                    </Link>
-                    
-                    <p className="text-gray-600 text-sm mb-3 line-clamp-2 flex-grow">
-                      {product.desc}
-                    </p>
-                    
-                    {/* Color Indicators */}
-                    {product.hasColors && product.colors && product.colors.length > 0 && (
-                      <div className="mb-3">
-                        <div className="flex items-center gap-1 mb-1">
-                          {product.colors.slice(0, 3).map((color, index) => (
-                            <div
-                              key={index}
-                              className="w-4 h-4 rounded-full border border-gray-300"
-                              style={{
-                                backgroundColor: getColorHex(color)
-                              }}
-                              title={getColorName(color)}
-                            />
-                          ))}
-                          {product.colors.length > 3 && (
-                            <span className="text-xs text-gray-500 ml-1">
-                              +{product.colors.length - 3}
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-xs text-gray-500">
-                          Available in {product.colors.length} color{product.colors.length !== 1 ? 's' : ''}
-                        </p>
-                      </div>
-                    )}
-                    
-                    {/* Features Preview */}
-                    {product.features && product.features.length > 0 && (
-                      <div className="mb-3">
-                        <ul className="space-y-1">
-                          {product.features.slice(0, 2).map((feature, index) => (
-                            <li key={index} className="flex items-start text-xs text-gray-600">
-                              <svg className="w-3 h-3 text-green-500 mt-0.5 mr-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                              </svg>
-                              <span className="line-clamp-1">{feature}</span>
-                            </li>
-                          ))}
-                          {product.features.length > 2 && (
-                            <li className="text-xs text-gray-500">
-                              +{product.features.length - 2} more features
-                            </li>
-                          )}
-                        </ul>
-                      </div>
-                    )}
-                    
-                    {/* Price and Add to Cart */}
-                    <div className="mt-auto">
-                      <div className="flex items-center justify-between mb-3">
-                        <div>
-                          <p className="text-lg font-bold text-indigo-600">
-                            Rs. {product.price.toLocaleString()}
+                      
+                      <p className="text-gray-600 text-sm mb-3 line-clamp-2 flex-grow">
+                        {product.desc}
+                      </p>
+                      
+                      {/* Color Indicators */}
+                      {product.hasColors && product.colors && product.colors.length > 0 && (
+                        <div className="mb-3">
+                          <div className="flex items-center gap-1 mb-1">
+                            {product.colors.slice(0, 3).map((color, index) => (
+                              <div
+                                key={index}
+                                className="w-4 h-4 rounded-full border border-gray-300"
+                                style={{
+                                  backgroundColor: getColorHex(color)
+                                }}
+                                title={getColorName(color)}
+                              />
+                            ))}
+                            {product.colors.length > 3 && (
+                              <span className="text-xs text-gray-500 ml-1">
+                                +{product.colors.length - 3}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs text-gray-500">
+                            Available in {product.colors.length} color{product.colors.length !== 1 ? 's' : ''}
                           </p>
-                          {product.stock > 0 && (
-                            <p className="text-xs text-gray-500">
-                              In stock: {product.stock}
-                            </p>
-                          )}
                         </div>
-                        
-                        {/* Quick view button for desktop */}
-                        <Link href={`/products/${product._id}`} className="hidden sm:block">
+                      )}
+                      
+                      {/* Rating Display */}
+                      {renderRating(product)}
+                      
+                      {/* Price and Add to Cart */}
+                      <div className="mt-auto pt-4 border-t border-gray-100">
+                        <div className="flex items-center justify-between mb-3">
+                          <div>
+                            <p className="text-lg font-bold text-indigo-600">
+                              Rs. {product.price.toLocaleString()}
+                            </p>
+                            {product.stock > 0 && (
+                              <p className="text-xs text-gray-500">
+                                In stock: {product.stock}
+                              </p>
+                            )}
+                          </div>
+                          
+                          {/* View button */}
                           <button className="text-sm text-gray-600 hover:text-indigo-600">
                             View →
                           </button>
-                        </Link>
+                        </div>
+                        
+                        <button
+                          onClick={(e) => handleAddToCart(e, product)}
+                          disabled={product.stock <= 0}
+                          className={`w-full py-2 rounded-lg font-medium transition ${
+                            product.stock <= 0
+                              ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                              : "bg-indigo-600 hover:bg-indigo-700 text-white"
+                          }`}
+                        >
+                          {product.stock <= 0 ? "Out of Stock" : "Add to Cart"}
+                        </button>
                       </div>
-                      
-                      <button
-                        onClick={() => handleAddToCart(product)}
-                        disabled={product.stock <= 0}
-                        className={`w-full py-2 rounded-lg font-medium transition ${
-                          product.stock <= 0
-                            ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                            : "bg-indigo-600 hover:bg-indigo-700 text-white"
-                        }`}
-                      >
-                        {product.stock <= 0 ? "Out of Stock" : "Add to Cart"}
-                      </button>
                     </div>
                   </div>
-                </div>
+                </Link>
               );
             })}
           </div>
