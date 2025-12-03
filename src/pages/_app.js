@@ -4,6 +4,8 @@ import { useRouter } from "next/router";
 import Navbar from "@/components/Navbar";
 import { CartProvider } from "@/context/CartContext";
 import { SessionProvider } from "next-auth/react";
+import { SpeedInsights } from "@vercel/speed-insights/next"
+import { Analytics } from "@vercel/analytics/next"
 
 // Create a wrapper component that uses the router
 function MyAppContent({ Component, pageProps, session }) {
@@ -14,6 +16,8 @@ function MyAppContent({ Component, pageProps, session }) {
     <SessionProvider session={session}>
       <CartProvider>
         {!hideNavbar && <Navbar />}
+        <Analytics/>
+        <SpeedInsights/>
         <Component {...pageProps} />
       </CartProvider>
     </SessionProvider>

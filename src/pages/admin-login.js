@@ -13,8 +13,8 @@ export default function AdminLogin() {
   const [rememberMe, setRememberMe] = useState(false);
 
   // You can store admin credentials in environment variables for security
-  const ADMIN_USERNAME = process.env.NEXT_PUBLIC_ADMIN_USERNAME || "admin";
-  const ADMIN_PASSWORD = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || "admin123";
+  const ADMIN_USERNAME = process.env.NEXT_PUBLIC_ADMIN_USERNAME;
+  const ADMIN_PASSWORD = process.env.NEXT_PUBLIC_ADMIN_PASSWORD;
 
   const handleLogin = (e) => {
     e.preventDefault();
