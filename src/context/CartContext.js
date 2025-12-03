@@ -54,7 +54,18 @@ export function CartProvider({ children }) {
         await fetch("/api/cart", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: user.email, items: cart }),
+          body: JSON.stringify({ 
+            email: user.email, 
+            items: cart.map(item => ({
+              id: item.id,
+              name: item.name,
+              price: item.price,
+              image: item.image,
+              qty: item.qty,
+              selectedColor: item.selectedColor,
+              quantity: item.quantity
+            }))
+          }),
         });
       } catch (err) {
         console.error("Error saving cart:", err);
@@ -66,35 +77,83 @@ export function CartProvider({ children }) {
     saveCart();
   }, [cart, user, loading]);
 
-  // Add item to cart
+  // Add item to cart - updated to handle colors
   const addToCart = (product) => {
-    const exists = cart.find((item) => item.id === product._id);
+    // Check if product has colors and a selected color
+    const colorKey = product.selectedColor || 'default';
+    
+    // Generate unique cart ID based on product ID and color
+    const cartItemId = `${product._id}_${colorKey}`;
+    
+    // Check if item already exists in cart
+    const existingItemIndex = cart.findIndex(item => 
+      item.id === cartItemId
+    );
 
-    if (exists) {
-      setCart(
-        cart.map((item) =>
-          item.id === product._id
-            ? { ...item, qty: (item.qty || 1) + 1 }
-            : item
-        )
-      );
+    if (existingItemIndex >= 0) {
+      // Update quantity of existing item
+      const updatedCart = [...cart];
+      const newQuantity = updatedCart[existingItemIndex].qty + (product.quantity || 1);
+      updatedCart[existingItemIndex] = {
+        ...updatedCart[existingItemIndex],
+        qty: newQuantity
+      };
+      setCart(updatedCart);
     } else {
-      setCart([
-        ...cart,
-        {
-          id: product._id,
-          name: product.name,
-          price: product.price,
-          image: product.image,
-          qty: 1,
-        },
-      ]);
+      // Add new item to cart
+      const cartItem = {
+        id: cartItemId,
+        productId: product._id, // Keep original product ID for reference
+        name: product.name,
+        price: product.price,
+        image: product.images?.[0] || product.image,
+        qty: product.quantity || 1,
+        selectedColor: product.selectedColor,
+        colorName: getColorName(product.selectedColor),
+        stock: product.stock,
+        hasColors: product.hasColors
+      };
+      setCart([...cart, cartItem]);
     }
   };
 
+  // Helper function to get color name
+  const getColorName = (colorValue) => {
+    const colorMap = {
+      "red": "Red",
+      "blue": "Blue", 
+      "green": "Green",
+      "black": "Black",
+      "white": "White",
+      "yellow": "Yellow",
+      "purple": "Purple",
+      "pink": "Pink",
+      "gray": "Gray",
+      "brown": "Brown"
+    };
+    return colorMap[colorValue] || colorValue;
+  };
+
   // Remove item
-  const removeFromCart = (id) => {
-    setCart(cart.filter((item) => item.id !== id));
+  const removeFromCart = (cartItemId) => {
+    setCart(cart.filter((item) => item.id !== cartItemId));
+  };
+
+  // Update item quantity
+  const updateQuantity = (cartItemId, newQuantity) => {
+    if (newQuantity < 1) return;
+    
+    setCart(cart.map((item) => {
+      if (item.id === cartItemId) {
+        // Don't exceed stock
+        const maxQuantity = item.stock || 99;
+        return {
+          ...item,
+          qty: Math.min(newQuantity, maxQuantity)
+        };
+      }
+      return item;
+    }));
   };
 
   // Clear cart
@@ -112,7 +171,10 @@ export function CartProvider({ children }) {
   };
 
   // Cart count
-  const cartCount = cart.reduce((sum, item) => sum + (item.qty || 1), 0);
+  const cartCount = cart.reduce((sum, item) => sum + item.qty, 0);
+
+  // Cart total
+  const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
 
   return (
     <CartContext.Provider
@@ -121,8 +183,11 @@ export function CartProvider({ children }) {
         setCart,
         addToCart,
         removeFromCart,
+        updateQuantity,
         clearCart,
         cartCount,
+        cartTotal,
+        loading
       }}
     >
       {children}
@@ -131,4 +196,3 @@ export function CartProvider({ children }) {
 }
 
 export const useCart = () => useContext(CartContext);
-

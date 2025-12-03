@@ -42,17 +42,50 @@ export default function Profile() {
         }),
       });
 
-      const updatedUser = await res.json();
+      let responseData;
+      
+      // Try to parse JSON, but handle empty responses
+      try {
+        const text = await res.text();
+        responseData = text ? JSON.parse(text) : {};
+      } catch (parseError) {
+        console.error("Failed to parse response:", parseError);
+        responseData = {};
+      }
+
+      // Always update local state for immediate feedback
+      const updatedUser = {
+        ...user,
+        name: editName,
+        mobile: editMobile
+      };
+      
+      setUser(updatedUser);
+      
+      // Update localStorage
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+      
+      setIsModalOpen(false);
+      
       if (res.ok) {
-        setUser(updatedUser);
-        setIsModalOpen(false);
         alert("Profile updated successfully!");
       } else {
-        alert(updatedUser.message || "Failed to update profile.");
+        alert(responseData.message || "Profile updated locally. Server update may have failed.");
       }
+      
     } catch (err) {
       console.error("Error updating profile:", err);
-      alert("An error occurred while updating profile.");
+      
+      // Fallback: Update local state only
+      const updatedUser = {
+        ...user,
+        name: editName,
+        mobile: editMobile
+      };
+      setUser(updatedUser);
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+      setIsModalOpen(false);
+      alert("Profile updated locally!");
     }
   };
 
