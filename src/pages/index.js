@@ -12,7 +12,7 @@ export default function Home() {
       router.push("/dashboard");
     } else {
       // If not logged in, go to login
-      router.push("/login");
+      router.push("/products");
     }
   }, [router]);
 
