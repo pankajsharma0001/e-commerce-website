@@ -1,6 +1,6 @@
 import { ObjectId } from 'mongodb';
 import clientPromise from '../../../../../../lib/mongodb';
-import { deleteImagesFromCloudinary } from '../../../../../../lib/cloudinary';
+// import { deleteImagesFromCloudinary } from '../../../../../../lib/cloudinary';
 
 export default async function handler(req, res) {
   const { id, reviewId } = req.query;
@@ -27,9 +27,9 @@ export default async function handler(req, res) {
       }
 
       // Delete old images from Cloudinary if new ones are uploaded
-      if (images && images.length > 0 && existingReview.images.length > 0) {
-        await deleteImagesFromCloudinary(existingReview.images);
-      }
+      // if (images && images.length > 0 && existingReview.images.length > 0) {
+      //   await deleteImagesFromCloudinary(existingReview.images);
+      // }
 
       const updateData = {
         rating: rating || existingReview.rating,
@@ -72,9 +72,9 @@ export default async function handler(req, res) {
       }
 
       // Delete images from Cloudinary
-      if (review.images && review.images.length > 0) {
-        await deleteImagesFromCloudinary(review.images);
-      }
+      // if (review.images && review.images.length > 0) {
+      //   await deleteImagesFromCloudinary(review.images);
+      // }
 
       // Delete review from database
       const result = await db.collection('reviews').deleteOne({
