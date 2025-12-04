@@ -119,7 +119,7 @@ export default function Login() {
           shake ? "animate-shake" : ""
         }`}
       >
-        <h1 className="text-4xl font-extrabold text-indigo-600 mb-4">JK Mega Mart</h1>
+        <h1 className="text-4xl font-extrabold text-indigo-600 mb-4">Pankaj Mega Mart</h1>
         <p className="text-gray-600 mb-8">
           {isSignUp ? "Create your account" : "Sign in to your account"}
         </p>

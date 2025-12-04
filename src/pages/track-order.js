@@ -553,7 +553,7 @@ export default function TrackOrder() {
       <footer className="bg-black text-white py-8">
         <div className="max-w-6xl mx-auto px-4">
           <div className="text-center">
-            <p className="text-2xl font-bold text-white mb-2">JK Mega Mart</p>
+            <p className="text-2xl font-bold text-white mb-2">Pankaj Mega Mart</p>
             <p className="mb-6 max-w-md mx-auto">
               Your trusted shopping destination with real-time order tracking
             </p>
@@ -572,7 +572,7 @@ export default function TrackOrder() {
               </Link>
             </div>
             <p className="text-sm text-gray-500">
-              © {new Date().getFullYear()} JK Mega Mart — All Rights Reserved.
+              © {new Date().getFullYear()} Pankaj Mega Mart — All Rights Reserved.
             </p>
           </div>
         </div>

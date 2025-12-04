@@ -118,7 +118,7 @@ export default function Dashboard() {
 
       {/* FOOTER */}
       <footer className="text-center py-6 bg-gray-900 text-gray-300 text-sm">
-        © {new Date().getFullYear()} JK Mega Mart — All Rights Reserved.
+        © {new Date().getFullYear()} Pankaj Mega Mart — All Rights Reserved.
       </footer>
     </div>
   );

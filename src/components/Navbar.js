@@ -104,7 +104,7 @@ export default function Navbar() {
         className="text-2xl sm:text-3xl font-extrabold tracking-wide cursor-pointer hover:opacity-90 transition"
         onClick={() => router.push("/")}
       >
-        JK Mega Mart
+        Pankaj Mega Mart
       </h1>
 
       {/* RIGHT SIDE — CART + HAMBURGER (MOBILE) */}
