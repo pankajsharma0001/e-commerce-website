@@ -44,8 +44,10 @@ export default function Products() {
             const maxPrice = Math.max(...prices);
             // Round up to nearest 1000
             const roundedMax = Math.ceil(maxPrice / 1000) * 1000;
-            setMaxPriceLimit(roundedMax);
-            setPriceRange({ min: 0, max: roundedMax });
+            // Ensure maxPriceLimit is at least 100000 for higher price inputs
+            const finalMaxLimit = Math.max(roundedMax, 100000);
+            setMaxPriceLimit(finalMaxLimit);
+            setPriceRange({ min: 0, max: finalMaxLimit });
           }
         }
         
@@ -165,8 +167,32 @@ export default function Products() {
   const resetFilters = () => {
     setSelectedCategory("all");
     setSearchQuery("");
-    setPriceRange({ min: 0, max: 100000 });
+    setPriceRange({ min: 0, max: maxPriceLimit });
     setSortBy("newest");
+  };
+
+  // Handle price input changes with better validation
+  const handleMinPriceChange = (e) => {
+    const value = parseInt(e.target.value) || 0;
+    // Allow min price to be up to maxPriceLimit
+    if (value >= 0 && value <= maxPriceLimit) {
+      // Ensure min doesn't exceed current max
+      const newMin = Math.min(value, priceRange.max);
+      setPriceRange(prev => ({ ...prev, min: newMin }));
+    }
+  };
+
+  const handleMaxPriceChange = (e) => {
+    let value = parseInt(e.target.value);
+    // Handle empty input or NaN
+    if (isNaN(value)) {
+      value = maxPriceLimit;
+    }
+    // Allow max price to go up to maxPriceLimit (at least 100000)
+    if (value >= priceRange.min && value <= 1000000) { // Increased max limit to 1,000,000
+      // Update price range
+      setPriceRange(prev => ({ ...prev, max: value }));
+    }
   };
 
   // Render star rating
@@ -242,9 +268,10 @@ export default function Products() {
       {/* FILTERS SECTION */}
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            {/* Search */}
-            <div className="relative flex-1 max-w-md">
+          {/* Main Filters Row - Updated for mobile */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            {/* Search - Full width on mobile, then takes space on larger screens */}
+            <div className="relative w-full sm:flex-1 sm:max-w-md">
               <input
                 type="text"
                 placeholder="Search products..."
@@ -257,172 +284,112 @@ export default function Products() {
               </svg>
             </div>
 
-            {/* Category Filter */}
-            <div className="flex items-center gap-2">
-              <span className="text-gray-700 font-medium hidden sm:inline">Category:</span>
-              <select
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                className="px-3 py-2 text-gray-600 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-              >
-                <option value="all">All Categories</option>
-                {categories.map((category, index) => (
-                  <option key={index} value={category}>
-                    {category}
-                  </option>
-                ))}
-              </select>
-            </div>
+            {/* Mobile: Category and Sort By side by side */}
+            <div className="flex flex-row items-center gap-2 sm:gap-4 w-full sm:w-auto">
+              {/* Category Filter */}
+              <div className="flex-1 sm:flex-initial">
+                <div className="flex items-center gap-1 sm:gap-2">
+                  <span className="text-gray-700 font-medium text-sm sm:text-base hidden sm:inline">Category:</span>
+                  <select
+                    value={selectedCategory}
+                    onChange={(e) => setSelectedCategory(e.target.value)}
+                    className="w-full sm:w-auto px-3 py-2 text-gray-600 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm sm:text-base"
+                  >
+                    <option value="all">All Categories</option>
+                    {categories.map((category, index) => (
+                      <option key={index} value={category}>
+                        {category}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
 
-            {/* Sort By */}
-            <div className="flex items-center gap-2">
-              <span className="text-gray-700 font-medium hidden sm:inline">Sort by:</span>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="px-3 py-2 text-gray-600 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-              >
-                <option value="newest">Newest</option>
-                <option value="price-low">Price: Low to High</option>
-                <option value="price-high">Price: High to Low</option>
-                <option value="name">Name: A to Z</option>
-                <option value="rating">Highest Rated</option>
-              </select>
+              {/* Sort By - Updated for mobile */}
+              <div className="flex-1 sm:flex-initial">
+                <div className="flex items-center gap-1 sm:gap-2">
+                  <span className="text-gray-700 font-medium text-sm sm:text-base hidden sm:inline">Sort by:</span>
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="w-full sm:w-auto px-3 py-2 text-gray-600 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm sm:text-base"
+                  >
+                    <option value="newest">Newest</option>
+                    <option value="price-low">Price: Low to High</option>
+                    <option value="price-high">Price: High to Low</option>
+                    <option value="name">Name: A to Z</option>
+                    <option value="rating">Highest Rated</option>
+                  </select>
+                </div>
+              </div>
             </div>
 
             {/* Reset Button */}
             <button
               onClick={resetFilters}
-              className="px-4 py-2 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-lg font-medium transition"
+              className="w-full sm:w-auto px-4 py-2 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-lg font-medium transition text-sm sm:text-base"
             >
               Reset Filters
             </button>
           </div>
 
-          {/* Price Range Filter */}
-          <div className="mt-4">
-            <div className="flex items-center justify-between mb-2">
+          {/* Price Range Filter - Updated for mobile */}
+          <div className="mt-6">
+            <div className="flex items-center justify-between mb-3">
               <span className="text-gray-700 font-medium">Price Range:</span>
-              <span className="text-indigo-600 font-semibold">
+              <span className="text-indigo-600 font-semibold text-sm sm:text-base">
                 Rs. {priceRange.min.toLocaleString()} - Rs. {priceRange.max.toLocaleString()}
               </span>
             </div>
             
-            {/* Price limits info */}
-            <div className="flex justify-between text-xs text-gray-500 mb-2">
-              <span>Rs. 0</span>
-              <span>Rs. {maxPriceLimit.toLocaleString()}</span>
-            </div>
-            
-            {/* Dual range slider */}
-            <div className="relative py-2">
-              {/* Background track */}
-              <div className="h-2 bg-gray-300 rounded-full"></div>
-              
-              {/* Colored active track */}
-              <div 
-                className="absolute top-2 h-2 bg-indigo-500 rounded-full"
-                style={{
-                  left: `${(priceRange.min / maxPriceLimit) * 100}%`,
-                  right: `${100 - (priceRange.max / maxPriceLimit) * 100}%`
-                }}
-              ></div>
-              
-              {/* Min slider */}
-              <input
-                type="range"
-                min="0"
-                max={maxPriceLimit}
-                value={priceRange.min}
-                onChange={(e) => {
-                  const value = parseInt(e.target.value);
-                  if (value <= priceRange.max) {
-                    setPriceRange(prev => ({ ...prev, min: value }));
-                  }
-                }}
-                className="absolute top-0 left-0 w-full h-4 opacity-0 cursor-pointer z-10"
-              />
-              
-              {/* Max slider */}
-              <input
-                type="range"
-                min="0"
-                max={maxPriceLimit}
-                value={priceRange.max}
-                onChange={(e) => {
-                  const value = parseInt(e.target.value);
-                  if (value >= priceRange.min) {
-                    setPriceRange(prev => ({ ...prev, max: value }));
-                  }
-                }}
-                className="absolute top-0 left-0 w-full h-4 opacity-0 cursor-pointer z-20"
-              />
-              
-              {/* Min thumb */}
-              <div 
-                className="absolute top-1 w-4 h-4 bg-white border-2 border-indigo-500 rounded-full shadow-lg transform -translate-y-1/2 z-30 cursor-pointer"
-                style={{ left: `${(priceRange.min / maxPriceLimit) * 100}%` }}
-              ></div>
-              
-              {/* Max thumb */}
-              <div 
-                className="absolute top-1 w-4 h-4 bg-white border-2 border-indigo-500 rounded-full shadow-lg transform -translate-y-1/2 z-30 cursor-pointer"
-                style={{ left: `${(priceRange.max / maxPriceLimit) * 100}%` }}
-              ></div>
-            </div>
-            
-            {/* Manual input fields */}
-            <div className="flex flex-col sm:flex-row items-center gap-3 mt-4">
-              <div className="flex-1 w-full">
-                <label className="block text-sm text-gray-600 mb-1">Min Price</label>
-                <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden">
-                  <span className="px-3 py-2 bg-gray-100 text-gray-700">Rs.</span>
-                  <input
-                    type="number"
-                    min="0"
-                    max={priceRange.max}
-                    value={priceRange.min}
-                    onChange={(e) => {
-                      const value = parseInt(e.target.value) || 0;
-                      if (value >= 0 && value <= priceRange.max && value <= maxPriceLimit) {
-                        setPriceRange(prev => ({ ...prev, min: value }));
-                      }
-                    }}
-                    className="flex-1 min-w-0 px-3 py-2 border-0 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                  />
+            {/* Manual input fields - Side by side on mobile */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+              {/* Min and Max Price Container - Side by side on mobile */}
+              <div className="flex flex-row w-full gap-3">
+                <div className="flex-1">
+                  <label className="block text-sm text-gray-600 mb-1">Min Price</label>
+                  <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden">
+                    <span className="px-3 py-2 bg-gray-100 text-gray-700 text-sm">Rs.</span>
+                    <input
+                      type="number"
+                      min="0"
+                      max={maxPriceLimit}
+                      value={priceRange.min}
+                      onChange={handleMinPriceChange}
+                      className="flex-1 min-w-0 px-3 py-2 text-gray-600 border-0 focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm"
+                    />
+                  </div>
                 </div>
-              </div>
-              
-              <div className="hidden sm:block text-gray-400">—</div>
-              
-              <div className="flex-1 w-full">
-                <label className="block text-sm text-gray-600 mb-1">Max Price</label>
-                <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden">
-                  <span className="px-3 py-2 bg-gray-100 text-gray-700">Rs.</span>
-                  <input
-                    type="number"
-                    min={priceRange.min}
-                    max={maxPriceLimit}
-                    value={priceRange.max}
-                    onChange={(e) => {
-                      const value = parseInt(e.target.value) || maxPriceLimit;
-                      if (value >= priceRange.min && value <= maxPriceLimit) {
-                        setPriceRange(prev => ({ ...prev, max: value }));
-                      }
-                    }}
-                    className="flex-1 min-w-0 px-3 py-2 border-0 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                  />
+                
+                <div className="flex-1">
+                  <label className="block text-sm text-gray-600 mb-1">Max Price</label>
+                  <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden">
+                    <span className="px-3 py-2 bg-gray-100 text-gray-700 text-sm">Rs.</span>
+                    <input
+                      type="number"
+                      min={priceRange.min}
+                      max={1000000} // Increased max limit to 1,000,000
+                      value={priceRange.max}
+                      onChange={handleMaxPriceChange}
+                      className="flex-1 min-w-0 px-3 py-2 text-gray-600 border-0 focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm"
+                    />
+                  </div>
                 </div>
               </div>
               
               {/* Reset price button */}
               <button
                 onClick={() => setPriceRange({ min: 0, max: maxPriceLimit })}
-                className="w-full sm:w-auto px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition self-end sm:self-auto"
+                className="w-full sm:w-auto px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition text-sm sm:text-base mt-2 sm:mt-0"
               >
-                Reset
+                Reset Price
               </button>
             </div>
+            
+            {/* Note about price limits */}
+            <p className="text-xs text-gray-500 mt-2">
+              You can enter prices up to Rs. 1,000,000
+            </p>
           </div>
         </div>
       </div>
@@ -430,12 +397,12 @@ export default function Products() {
       {/* RESULTS INFO */}
       <div className="max-w-7xl mx-auto px-4 py-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="text-gray-700">
+          <p className="text-gray-700 text-sm sm:text-base">
             Showing <span className="font-semibold">{filteredProducts.length}</span> of{" "}
             <span className="font-semibold">{products.length}</span> products
           </p>
           {searchQuery && (
-            <p className="text-gray-600">
+            <p className="text-gray-600 text-sm sm:text-base">
               Search results for: <span className="font-semibold">"{searchQuery}"</span>
             </p>
           )}
@@ -508,11 +475,11 @@ export default function Products() {
 
                     {/* Product Info */}
                     <div className="p-4 flex-grow flex flex-col">
-                      <h3 className="font-semibold text-gray-800 mb-1 line-clamp-1 hover:text-indigo-600 transition">
+                      <h3 className="font-semibold text-gray-800 mb-1 line-clamp-1 hover:text-indigo-600 transition text-sm sm:text-base">
                         {product.name}
                       </h3>
                       
-                      <p className="text-gray-600 text-sm mb-3 line-clamp-2 flex-grow">
+                      <p className="text-gray-600 text-xs sm:text-sm mb-3 line-clamp-2 flex-grow">
                         {product.desc}
                       </p>
                       
@@ -568,7 +535,7 @@ export default function Products() {
                         <button
                           onClick={(e) => handleAddToCart(e, product)}
                           disabled={product.stock <= 0}
-                          className={`w-full py-2 rounded-lg font-medium transition ${
+                          className={`w-full py-2 rounded-lg font-medium transition text-sm sm:text-base ${
                             product.stock <= 0
                               ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                               : "bg-indigo-600 hover:bg-indigo-700 text-white"

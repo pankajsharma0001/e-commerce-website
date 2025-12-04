@@ -64,14 +64,21 @@ export default function Admin() {
       fetch("/api/products")
         .then((res) => res.json())
         .then((data) => {
-          if (Array.isArray(data)) {
-            setProducts(data);
-          } else if (data.products && Array.isArray(data.products)) {
+          console.log("Products API response:", data);
+          
+          // The API returns { success: true, products: [...], categories: [...] }
+          // So we need to access data.products
+          if (data && data.products && Array.isArray(data.products)) {
             setProducts(data.products);
+            console.log("Set products array with", data.products.length, "items");
           } else {
             console.error("Unexpected products response format:", data);
             setProducts([]);
           }
+        })
+        .catch((error) => {
+          console.error("Error fetching products:", error);
+          setProducts([]);
         });
     }
   }, [view, isAuthenticated]);
@@ -624,7 +631,9 @@ function EditProductForm({ product, setEditingProduct, setProducts }) {
       if (response.success) {
         alert("✅ Product updated!");
         setEditingProduct(null);
-        const updatedProducts = await fetch("/api/products").then(r => r.json());
+        const response = await fetch("/api/products");
+        const data = await response.json();
+        const updatedProducts = data.products || [];
         setProducts(updatedProducts);
       } else {
         setMessage("❌ Error: " + response.message);
@@ -851,57 +860,72 @@ function EditProducts({ products, setEditingProduct, setProducts }) {
     }
   };
 
+  const safeProducts = Array.isArray(products) ? products : [];
+
   return (
     <div>
-      <h3 className="text-2xl text-gray-800 font-semibold mb-4">Edit Products ({products.length} total)</h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {products.map((product) => (
-          <div key={product._id} className="bg-white text-gray-800 p-4 rounded-lg shadow">
-            <img 
-              src={product.images?.[0] || product.image} 
-              className="w-full h-40 object-cover rounded-lg mb-2" 
-            />
-            <h4 className="font-semibold">{product.name}</h4>
-            <p className="text-sm text-gray-600">{product.category}</p>
-            <p className="font-bold">Rs. {product.price}</p>
-            <p>Stock: {product.stock}</p>
-            {product.hasColors && product.colors?.length > 0 && (
-              <div className="mt-2">
-                <p className="text-sm text-gray-600">Colors: {product.colors.length}</p>
-                <div className="flex gap-1 mt-1">
-                  {product.colors.slice(0, 3).map((color, idx) => (
-                    <div
-                      key={idx}
-                      className="w-4 h-4 rounded-full border"
-                      style={{
-                        backgroundColor: colorOptions.find(c => c.value === color)?.hex || '#ccc'
-                      }}
-                      title={color}
-                    />
-                  ))}
-                  {product.colors.length > 3 && (
-                    <span className="text-xs text-gray-500 ml-1">+{product.colors.length - 3}</span>
-                  )}
+      <h3 className="text-2xl text-gray-800 font-semibold mb-4">
+        Edit Products ({safeProducts.length} total)
+      </h3>
+      
+      {safeProducts.length === 0 ? (
+        <div className="text-center py-8">
+          <p className="text-gray-600">No products found or loading...</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {safeProducts.map((product) => (
+            <div key={product._id} className="bg-white text-gray-800 p-4 rounded-lg shadow">
+              <img 
+                src={product.images?.[0] || product.image} 
+                className="w-full h-40 object-cover rounded-lg mb-2" 
+              />
+              <h4 className="font-semibold">{product.name}</h4>
+              <p className="text-sm text-gray-600">{product.category}</p>
+              <p className="font-bold">Rs. {product.price}</p>
+              <p>Stock: {product.stock}</p>
+              
+              {product.hasColors && product.colors?.length > 0 && (
+                <div className="mt-2">
+                  <p className="text-sm text-gray-600">Colors: {product.colors.length}</p>
+                  <div className="flex gap-1 mt-1">
+                    {product.colors.slice(0, 3).map((color, idx) => (
+                      <div
+                        key={idx}
+                        className="w-4 h-4 rounded-full border"
+                        style={{
+                          backgroundColor: colorOptions.find(c => c.value === color)?.hex || '#ccc'
+                        }}
+                        title={color}
+                      />
+                    ))}
+                    {product.colors.length > 3 && (
+                      <span className="text-xs text-gray-500 ml-1">
+                        +{product.colors.length - 3}
+                      </span>
+                    )}
+                  </div>
                 </div>
+              )}
+              
+              <div className="flex gap-2 mt-3">
+                <button 
+                  className="bg-yellow-500 px-3 py-1 rounded text-white hover:bg-yellow-600" 
+                  onClick={() => setEditingProduct(product)}
+                >
+                  Edit
+                </button>
+                <button 
+                  className="bg-red-500 px-3 py-1 rounded text-white hover:bg-red-600" 
+                  onClick={() => deleteProduct(product._id)}
+                >
+                  Delete
+                </button>
               </div>
-            )}
-            <div className="flex gap-2 mt-3">
-              <button 
-                className="bg-yellow-500 px-3 py-1 rounded text-white hover:bg-yellow-600" 
-                onClick={() => setEditingProduct(product)}
-              >
-                Edit
-              </button>
-              <button 
-                className="bg-red-500 px-3 py-1 rounded text-white hover:bg-red-600" 
-                onClick={() => deleteProduct(product._id)}
-              >
-                Delete
-              </button>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
