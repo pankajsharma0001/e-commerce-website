@@ -9,7 +9,7 @@ export default function Home() {
     const user = localStorage.getItem("user");
     if (user) {
       // If logged in, go to dashboard
-      router.push("/dashboard");
+      router.push("/products");
     } else {
       // If not logged in, go to login
       router.push("/login");
